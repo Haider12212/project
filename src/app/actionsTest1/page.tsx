@@ -1,74 +1,65 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { getPatientById } from '@/actions/patients/getPatientById'; // Ensure correct path
+import React, { useState, useEffect } from 'react';
+import { getAppointmentsByDoctorId } from '@/actions/doctor/viewAppointments';
+import { useSession } from 'next-auth/react';
 
-const PatientDetailsPage = () => {
-  const [patientData, setPatientData] = useState(null);
+const DoctorAppointments = () => {
+  const { data: session, status } = useSession(); // Get the session
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [doctorId, setDoctorId] = useState(null);
 
-  // Hardcoded patient ID
-  const patientId = 'dV6UWVIvQwWz8IZgPfAGM06gVhk2';
-
-  // Fetch patient data when the component mounts
+  // Fetch doctorId from the session
   useEffect(() => {
-    const fetchPatientData = async () => {
-      setLoading(true);
-      try {
-        const data = await getPatientById(patientId);
-        setPatientData(data);
-        setLoading(false);
-      } catch (error) {
-        setError('Failed to fetch patient data.');
-        setLoading(false);
-      }
-    };
-    fetchPatientData();
-  }, [patientId]);
+    if (session?.user?.userType === 'doctor') {
+      setDoctorId(session.user.id); // Set the doctorId from session
+    }
+  }, [session]);
 
-  if (loading) {
-    return <p>Loading patient data...</p>;
-  }
+  // Fetch appointments once doctorId is available
+  useEffect(() => {
+    if (doctorId) {
+      const fetchAppointments = async () => {
+        try {
+          const result = await getAppointmentsByDoctorId(doctorId);
+          setAppointments(result);
+        } catch (error) {
+          setError('Failed to fetch appointments');
+        } finally {
+          setLoading(false);
+        }
+      };
 
-  if (error) {
-    return <p>{error}</p>;
-  }
+      fetchAppointments();
+    }
+  }, [doctorId]);
+
+  if (status === 'loading') return <p>Loading session...</p>;
+  if (!doctorId) return <p>Unable to fetch doctor information.</p>;
+  if (loading) return <p>Loading appointments...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="patient-details-container p-6">
-      <h1 className="text-3xl font-bold mb-6">Patient Details</h1>
-      {patientData ? (
-        <div>
-          <p><strong>Name:</strong> {patientData.name}</p>
-          <p><strong>Email:</strong> {patientData.email}</p>
-          <p><strong>Date of Birth:</strong> {patientData.dob}</p>
-          <p><strong>Gender:</strong> {patientData.gender}</p>
-          <p><strong>Contact Info:</strong> {patientData.contactInfo}</p>
-          <p><strong>Emergency Contact:</strong> {patientData.emergencyContact}</p>
-          <p><strong>User Type:</strong> {patientData.userType}</p>
-          <p><strong>Created At:</strong> {new Date(patientData.createdAt.seconds * 1000).toLocaleString()}</p>
-
-          <h2 className="text-2xl font-bold mt-6">Medical Documents</h2>
-          {patientData.medicalDocuments && patientData.medicalDocuments.length > 0 ? (
-            <ul>
-              {patientData.medicalDocuments.map((doc, index) => (
-                <li key={index}>
-                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                    {doc.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No medical documents uploaded.</p>
-          )}
-        </div>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Appointments for Doctor {doctorId}</h1>
+      {appointments.length > 0 ? (
+        <ul>
+          {appointments.map((appointment) => (
+            <li key={appointment.id} className="border-b py-2">
+              <p><strong>Patient:</strong> {appointment.patientName}</p>
+              <p><strong>Date:</strong> {appointment.appointmentDate}</p>
+              <p><strong>Slot:</strong> {appointment.slot}</p>
+              <p><strong>Notes:</strong> {appointment.notes || 'No notes'}</p>
+            </li>
+          ))}
+        </ul>
       ) : (
-        <p>No patient data found.</p>
+        <p>No appointments found for this doctor.</p>
       )}
     </div>
   );
 };
 
-export default PatientDetailsPage;
+export default DoctorAppointments;
