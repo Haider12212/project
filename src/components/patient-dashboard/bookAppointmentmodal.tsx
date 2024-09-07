@@ -79,8 +79,8 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 
   useEffect(() => {
     if (session?.user) {
-      setPatientName(session.user. || 'Loading...');
-      setPatientId(session.user.id || 'unknown');
+      setPatientName(session?.user?.userName || 'unknown');
+      setPatientId(session.user?.id);
       // Set default values for hidden fields
       setValue('patientName', session.user.name || '');
       setValue('patientId', session.user.id || 'unknown');

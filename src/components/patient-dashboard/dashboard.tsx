@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Calendar, User, Clipboard, Activity } from 'react-feather'; // Icons for the dashboard
 import { uploadFiles } from '@/actions/files/uploadFiles'; // Import the upload function
 import { useSession } from 'next-auth/react';  // Import to get the user session
+import BookAppointmentModal from './bookAppointmentmodal'; // Import the modal component
 
 type Props = {};
 
@@ -14,6 +15,7 @@ const Dashboard = (props: Props) => {
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [documentNames, setDocumentNames] = useState<string[]>([]); // Store document names
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +56,12 @@ const Dashboard = (props: Props) => {
     }
   };
 
+  // Function to open the modal
+  const openModal = () => setIsModalOpen(true);
+
+  // Function to close the modal
+  const closeModal = () => setIsModalOpen(false);
+
   return (
     <div className="dashboard-container p-6">
       <h1 className="text-3xl font-bold mb-6">Patient Dashboard</h1>
@@ -88,7 +96,12 @@ const Dashboard = (props: Props) => {
           <Activity size={48} />
           <h2 className="text-xl font-semibold mt-4">Book New Appointment</h2>
           <p className="mt-2">Schedule a new appointment with a doctor.</p>
-          <button className="mt-4 bg-red-700 py-2 px-4 rounded">Book Appointment</button>
+          <button
+            onClick={openModal}
+            className="mt-4 bg-red-700 py-2 px-4 rounded"
+          >
+            Book Appointment
+          </button>
         </div>
 
         {/* Upload Medical Documents */}
@@ -135,6 +148,9 @@ const Dashboard = (props: Props) => {
           </div>
         </div>
       </div>
+
+      {/* Render BookAppointmentModal if isModalOpen is true */}
+      {isModalOpen && <BookAppointmentModal onClose={closeModal} />}
     </div>
   );
 };
