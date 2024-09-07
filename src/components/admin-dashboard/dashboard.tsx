@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import AddDoctorModal from './addDoctormodal'; // Adjust the import path as needed
+import AddDoctorModal from './addDoctormodal';
 
 type Props = {
   numDoctors: number;

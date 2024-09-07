@@ -4,12 +4,16 @@ import AdminDashboard from '@/components/admin-dashboard/dashboard';
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/logout-button/logout';
 import { useSession } from 'next-auth/react';
+import { countPatients } from '@/actions/admin/countPatients';
 
 type Props = {}
 
-const AdminPage = (props: Props) => {
+const AdminPage =  (props: Props) => {
   const { data: session, status } = useSession();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const numDoctors = 20; // Example static value, replace with actual data fetching logic
+  const numAppointments = 150; // Example static value, replace with actual data fetching logic
+  const numPatients =  countPatients();
 
   useEffect(() => {
     if (session && session.user?.userType === 'admin') {
@@ -37,7 +41,7 @@ const AdminPage = (props: Props) => {
   return (
     <div>
       <Header />
-      <AdminDashboard numDoctors={0} numAppointments={0} numPatients={0} />
+      <AdminDashboard numAppointments={numAppointments} numPatients={numPatients} numDoctors={numDoctors} />
     </div>
   );
 };
