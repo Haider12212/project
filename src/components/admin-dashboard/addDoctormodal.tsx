@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'; // Make sure to install @heroicons/react
-import { useSession } from 'next-auth/react';
 
 type FormValues = {
   name: string;
