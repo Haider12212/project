@@ -2,40 +2,35 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, UserCheck, Clipboard, Clock } from 'react-feather'; // Icons for the dashboard
-import { getAppointmentsByDoctorId } from '@/actions/doctor/viewAppointments';
-import { getPatientsByDoctorId } from '@/actions/doctor/viewPatients'; // New function to fetch patients
+import { getAppointmentsByDoctorId } from '@/actions/doctor/viewAppointments'; // Adjust the path if necessary
 import { useSession } from 'next-auth/react'; // To access the doctor ID from the session
 
 const DoctorDashboard = () => {
   const { data: session } = useSession();
   const [appointments, setAppointments] = useState([]);
-  const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // Fetch appointments using the doctorId from the session
   useEffect(() => {
-    const fetchAppointmentsAndPatients = async () => {
+    const fetchAppointments = async () => {
       if (session?.user?.id) {
         try {
-          const fetchedAppointments = await getAppointmentsByDoctorId(session.user.id);
-          setAppointments(fetchedAppointments);
-          
-          const fetchedPatients = await getPatientsByDoctorId(session.user.id); // Fetch patients
-          setPatients(fetchedPatients);
+          const result = await getAppointmentsByDoctorId(session.user.id);
+          setAppointments(result);
         } catch (error) {
-          setError('Failed to fetch data.');
+          setError('Failed to fetch appointments.');
         } finally {
           setLoading(false);
         }
       }
     };
     
-    fetchAppointmentsAndPatients();
+    fetchAppointments();
   }, [session]);
 
   if (loading) {
-    return <p>Loading your dashboard...</p>;
+    return <p>Loading your appointments...</p>;
   }
 
   if (error) {
@@ -75,41 +70,7 @@ const DoctorDashboard = () => {
           <UserCheck size={48} />
           <h2 className="text-xl font-semibold mt-4">View Patient Information</h2>
           <p className="mt-2">Access detailed information about your patients.</p>
-          <div className="mt-4">
-            {patients.length > 0 ? (
-              <ul>
-                {patients.map((patient) => (
-                  <li key={patient.id} className="border-b py-2">
-                    <p><strong>Name:</strong> {patient.name}</p>
-                    <p><strong>Email:</strong> {patient.email}</p>
-                    <p><strong>Date of Birth:</strong> {patient.dob}</p>
-                    <p><strong>Gender:</strong> {patient.gender}</p>
-                    <p><strong>Contact Info:</strong> {patient.contactInfo}</p>
-                    <p><strong>Emergency Contact:</strong> {patient.emergencyContact}</p>
-                    <p><strong>User Type:</strong> {patient.userType}</p>
-
-                    {/* Display medical documents */}
-                    <h3 className="mt-4 text-lg font-semibold">Medical Documents:</h3>
-                    {patient.medicalDocuments.length > 0 ? (
-                      <ul>
-                        {patient.medicalDocuments.map((doc, index) => (
-                          <li key={index}>
-                            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-white underline">
-                              {doc.name}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>No medical documents available.</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No patients found.</p>
-            )}
-          </div>
+          <button className="mt-4 bg-green-700 py-2 px-4 rounded">Go to Patients</button>
         </div>
 
         {/* View Medical Records */}
