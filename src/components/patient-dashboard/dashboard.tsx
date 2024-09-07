@@ -1,61 +1,65 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Clipboard, Activity } from 'react-feather'; // Icons for the dashboard
-import { uploadFiles } from '@/actions/files/uploadFiles'; // Import the upload function
-import { useSession } from 'next-auth/react';  // Import to get the user session
-import BookAppointmentModal from './bookAppointmentmodal'; // Import the modal component
+import { Calendar, User, Clipboard, Activity } from 'react-feather';
+import { uploadFiles } from '@/actions/files/uploadFiles';
+import { useSession } from 'next-auth/react';
+import BookAppointmentModal from './bookAppointmentmodal';
+import ViewMedicalHistoryModal from './viewMedicalhistorymodal'; 
+import ViewBookedAppointmentsModal from './viewBookedAppointmentsModal'; 
+import ViewDoctorsModal from './viewDoctorsModal'; // Import the new modal component
 
-type Props = {};
+type Document = {
+  name: string;
+  url: string;
+};
 
-const Dashboard = (props: Props) => {
-  const { data: session } = useSession();  // Get user session data
-  const [userId, setUserId] = useState<string | null>(null); // Store userId
-  const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
+const Dashboard = () => {
+  const { data: session } = useSession();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [documentNames, setDocumentNames] = useState<string[]>([]); // Store document names
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [documentNames, setDocumentNames] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewMedicalModalOpen, setIsViewMedicalModalOpen] = useState(false);
+  const [isViewAppointmentsModalOpen, setIsViewAppointmentsModalOpen] = useState(false);
+  const [isViewDoctorsModalOpen, setIsViewDoctorsModalOpen] = useState(false); // State for doctors modal
 
-  // Use useEffect to set the userId after the session is loaded
   useEffect(() => {
     if (session?.user?.id) {
-      console.log(session.user)
       setUserId(session.user.id);
     }
   }, [session]);
 
-  // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setSelectedFiles(e.target.files);
-      setDocumentNames(Array.from(e.target.files).map(() => "")); // Initialize empty document names
+      setDocumentNames(Array.from(e.target.files).map(() => ""));
     }
   };
 
-  // Handle document name input change
   const handleDocumentNameChange = (index: number, name: string) => {
-    const updatedNames = [...documentNames];
-    updatedNames[index] = name;
-    setDocumentNames(updatedNames);
+    setDocumentNames(prev => {
+      const updatedNames = [...prev];
+      updatedNames[index] = name;
+      return updatedNames;
+    });
   };
 
-  // Handle the file upload
   const handleUpload = async () => {
-    if (!selectedFiles || documentNames.some((name) => !name) || !userId) {
+    if (!selectedFiles || documentNames.some(name => !name) || !userId) {
       alert('Please provide a name for each document.');
       return;
     }
     setUploading(true);
     try {
-      // Map selected files to their document names
       const filesWithNames = Array.from(selectedFiles).map((file, index) => ({
         file,
         name: documentNames[index],
       }));
 
-      // Call uploadFiles function with userId and files
       const uploadedDocs = await uploadFiles(filesWithNames, userId, 'medical-documents');
-      setDocuments((prevDocs) => [...prevDocs, ...uploadedDocs]);
+      setDocuments(prev => [...prev, ...uploadedDocs]);
     } catch (error) {
       console.error('Error uploading documents:', error);
     } finally {
@@ -63,11 +67,17 @@ const Dashboard = (props: Props) => {
     }
   };
 
-  // Function to open the modal
   const openModal = () => setIsModalOpen(true);
-
-  // Function to close the modal
   const closeModal = () => setIsModalOpen(false);
+
+  const openViewMedicalHistoryModal = () => setIsViewMedicalModalOpen(true);
+  const closeViewMedicalHistoryModal = () => setIsViewMedicalModalOpen(false);
+
+  const openViewAppointmentsModal = () => setIsViewAppointmentsModalOpen(true);
+  const closeViewAppointmentsModal = () => setIsViewAppointmentsModalOpen(false);
+
+  const openViewDoctorsModal = () => setIsViewDoctorsModalOpen(true); // Open doctors modal
+  const closeViewDoctorsModal = () => setIsViewDoctorsModalOpen(false); // Close doctors modal
 
   return (
     <div className="dashboard-container p-6">
@@ -79,7 +89,12 @@ const Dashboard = (props: Props) => {
           <Calendar size={48} />
           <h2 className="text-xl font-semibold mt-4">View Appointments</h2>
           <p className="mt-2">Check and manage your upcoming appointments.</p>
-          <button className="mt-4 bg-blue-700 py-2 px-4 rounded">Go to Appointments</button>
+          <button
+            onClick={openViewAppointmentsModal}
+            className="mt-4 bg-blue-700 py-2 px-4 rounded"
+          >
+            Go to Appointments
+          </button>
         </div>
         
         {/* View Medical History */}
@@ -87,7 +102,12 @@ const Dashboard = (props: Props) => {
           <Clipboard size={48} />
           <h2 className="text-xl font-semibold mt-4">View Medical History</h2>
           <p className="mt-2">Review your past medical records and reports.</p>
-          <button className="mt-4 bg-green-700 py-2 px-4 rounded">Go to Medical History</button>
+          <button
+            onClick={openViewMedicalHistoryModal}
+            className="mt-4 bg-green-700 py-2 px-4 rounded"
+          >
+            Go to Medical History
+          </button>
         </div>
         
         {/* View Doctors */}
@@ -95,7 +115,12 @@ const Dashboard = (props: Props) => {
           <User size={48} />
           <h2 className="text-xl font-semibold mt-4">View Doctors</h2>
           <p className="mt-2">Find doctors and specialists available for consultations.</p>
-          <button className="mt-4 bg-yellow-700 py-2 px-4 rounded">Go to Doctors</button>
+          <button
+            onClick={openViewDoctorsModal} // Handle button click to open doctors modal
+            className="mt-4 bg-yellow-700 py-2 px-4 rounded"
+          >
+            Go to Doctors
+          </button>
         </div>
         
         {/* Book New Appointment */}
@@ -135,12 +160,11 @@ const Dashboard = (props: Props) => {
           <button
             onClick={handleUpload}
             className="mt-4 bg-purple-700 py-2 px-4 rounded"
-            disabled={uploading || !selectedFiles || documentNames.some((name) => !name) || !userId}
+            disabled={uploading || !selectedFiles || documentNames.some(name => !name) || !userId}
           >
             {uploading ? 'Uploading...' : 'Upload Documents'}
           </button>
 
-          {/* Show uploaded documents */}
           <div className="mt-4">
             <h3 className="text-lg font-semibold">Uploaded Documents:</h3>
             <ul>
@@ -158,6 +182,15 @@ const Dashboard = (props: Props) => {
 
       {/* Render BookAppointmentModal if isModalOpen is true */}
       {isModalOpen && <BookAppointmentModal onClose={closeModal} />}
+
+      {/* Render ViewMedicalHistoryModal if isViewMedicalModalOpen is true */}
+      {isViewMedicalModalOpen && <ViewMedicalHistoryModal onClose={closeViewMedicalHistoryModal} patientId={session?.user?.id} />}
+
+      {/* Render ViewBookedAppointmentsModal if isViewAppointmentsModalOpen is true */}
+      {isViewAppointmentsModalOpen && <ViewBookedAppointmentsModal onClose={closeViewAppointmentsModal} patientId={session?.user?.id} />}
+
+      {/* Render ViewDoctorsModal if isViewDoctorsModalOpen is true */}
+      {isViewDoctorsModalOpen && <ViewDoctorsModal onClose={closeViewDoctorsModal} />}
     </div>
   );
 };
