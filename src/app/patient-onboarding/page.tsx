@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { getUserDataAndUploadToPatients } from '@/actions/patients/createPatients';
 import {useRouter} from 'next/navigation';
+import Header from '@/components/logout-button/logout';
 type FormData = {
   name: string;
   dateOfBirth: string;
@@ -42,7 +43,9 @@ const PatientOnboarding: React.FC = () => {
   if (status === 'loading') return <p>Loading...</p>;
 
   return (
+    
     <div className="p-6">
+        <Header />
       <h1 className="text-2xl font-bold mb-4">Patient Onboarding</h1>
       {error && <p className="text-red-500">{error}</p>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
