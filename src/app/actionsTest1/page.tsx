@@ -1,56 +1,74 @@
 'use client';
-import React, { useState } from 'react';
-import { uploadFile } from '@/actions/files/uploadFiles';  // Adjust the path as needed
 
-const FileUploadComponent = () => {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [downloadURL, setDownloadURL] = useState<string | null>(null);
+import { useState, useEffect } from 'react';
+import { getPatientById } from '@/actions/patients/getPatientById'; // Ensure correct path
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
-    }
-  };
+const PatientDetailsPage = () => {
+  const [patientData, setPatientData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const handleUpload = async () => {
-    if (!file) return;
+  // Hardcoded patient ID
+  const patientId = 'dV6UWVIvQwWz8IZgPfAGM06gVhk2';
 
-    setUploading(true);
+  // Fetch patient data when the component mounts
+  useEffect(() => {
+    const fetchPatientData = async () => {
+      setLoading(true);
+      try {
+        const data = await getPatientById(patientId);
+        setPatientData(data);
+        setLoading(false);
+      } catch (error) {
+        setError('Failed to fetch patient data.');
+        setLoading(false);
+      }
+    };
+    fetchPatientData();
+  }, [patientId]);
 
-    try {
-      // Call the uploadFile function
-      const url = await uploadFile(file, 'your-folder-name'); // Optional folder name
-      setDownloadURL(url);
-      console.log('File uploaded successfully:', url);
-    } catch (error) {
-      console.error('Error uploading file:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
+  if (loading) {
+    return <p>Loading patient data...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <input type="file" onChange={handleFileChange} />
-      <button
-        className="bg-blue-500 text-white p-2 rounded mt-4"
-        onClick={handleUpload}
-        disabled={!file || uploading}
-      >
-        {uploading ? 'Uploading...' : 'Upload'}
-      </button>
+    <div className="patient-details-container p-6">
+      <h1 className="text-3xl font-bold mb-6">Patient Details</h1>
+      {patientData ? (
+        <div>
+          <p><strong>Name:</strong> {patientData.name}</p>
+          <p><strong>Email:</strong> {patientData.email}</p>
+          <p><strong>Date of Birth:</strong> {patientData.dob}</p>
+          <p><strong>Gender:</strong> {patientData.gender}</p>
+          <p><strong>Contact Info:</strong> {patientData.contactInfo}</p>
+          <p><strong>Emergency Contact:</strong> {patientData.emergencyContact}</p>
+          <p><strong>User Type:</strong> {patientData.userType}</p>
+          <p><strong>Created At:</strong> {new Date(patientData.createdAt.seconds * 1000).toLocaleString()}</p>
 
-      {downloadURL && (
-        <div className="mt-4">
-          <p>Download URL:</p>
-          <a href={downloadURL} target="_blank" rel="noopener noreferrer">
-            {downloadURL}
-          </a>
+          <h2 className="text-2xl font-bold mt-6">Medical Documents</h2>
+          {patientData.medicalDocuments && patientData.medicalDocuments.length > 0 ? (
+            <ul>
+              {patientData.medicalDocuments.map((doc, index) => (
+                <li key={index}>
+                  <a href={doc.url} target="_blank" rel="noopener noreferrer">
+                    {doc.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No medical documents uploaded.</p>
+          )}
         </div>
+      ) : (
+        <p>No patient data found.</p>
       )}
     </div>
   );
 };
 
-export default FileUploadComponent;
+export default PatientDetailsPage;
