@@ -27,7 +27,8 @@ export const authOptionsConfig = {
               return {
                 id: user.uid,
                 email: user.email,
-                userType: userData.userType, // Include additional fields as needed
+                userType: userData.userType, 
+                userID : userDoc.id
               };
             } else {
               return null;
