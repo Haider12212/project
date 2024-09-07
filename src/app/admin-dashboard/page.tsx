@@ -11,13 +11,22 @@ type Props = {}
 const AdminPage =  (props: Props) => {
   const { data: session, status } = useSession();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [numPatients, setNumPatients] = useState(0);
   const numDoctors = 20; // Example static value, replace with actual data fetching logic
   const numAppointments = 150; // Example static value, replace with actual data fetching logic
-  const numPatients =  countPatients();
+
+  async function getPatients() {
+    const numPatients = await countPatients();
+    return numPatients;
+  }
 
   useEffect(() => {
     if (session && session.user?.userType === 'admin') {
       setIsAuthorized(true);
+
+      getPatients().then((numPatients) => {
+        setNumPatients(numPatients);
+      }); 
     } else {
       setIsAuthorized(false);
     }
