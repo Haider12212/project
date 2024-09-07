@@ -1,11 +1,12 @@
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { getDoctors } from '@/actions/patients/getDoctors';
 import { getSlotsForDoctor } from '@/actions/patients/getSlotsForDoctors';
+import { createAppointment } from '@/actions/appointment/createAppointment'; // Import the createAppointment function
 import { useSession } from 'next-auth/react'; // Assuming you're using next-auth
 
-// Type for form values
 type FormValues = {
   appointmentDate: string;
   slot: string;
@@ -26,14 +27,13 @@ const generateDates = (numDays: number) => {
       const dayName = nextDate.toLocaleDateString('en-US', { weekday: 'long' });
       dates.push({
         date: nextDate.toISOString().split('T')[0],
-        day: dayName
+        day: dayName,
       });
     }
   }
   return dates;
 };
 
-// BookAppointmentModal component
 const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { data: session } = useSession();
   const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>();
@@ -42,13 +42,13 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
-  const [patientName, setPatientName] = useState<string>('');
-  const [patientId, setPatientId] = useState<string>('');
 
+  // Fetch available dates
   useEffect(() => {
     setAvailableDates(generateDates(5));
   }, []);
 
+  // Fetch doctors
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
@@ -62,6 +62,7 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     fetchDoctors();
   }, []);
 
+  // Fetch available slots when a doctor and date are selected
   useEffect(() => {
     if (selectedDoctor && selectedDate) {
       const fetchSlots = async () => {
@@ -77,19 +78,33 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     }
   }, [selectedDoctor, selectedDate]);
 
+  // Populate patient name and ID from the session
   useEffect(() => {
     if (session?.user) {
-      setPatientName(session?.user?.userName || 'unknown');
-      setPatientId(session.user?.id);
-      // Set default values for hidden fields
-      setValue('patientName', session.user.name || '');
-      setValue('patientId', session.user.id || 'unknown');
+      const patientName = session.user.name || 'Unknown';
+      const patientId = session.user.id || '';
+      setValue('patientName', patientName);
+      setValue('patientId', patientId);
     }
   }, [session, setValue]);
 
-  const onSubmit: SubmitHandler<FormValues> = data => {
-    console.log(data);
-    onClose();
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    try {
+      // Call the createAppointment function
+      const appointmentId = await createAppointment({
+        patientId: data.patientId,
+        patientName: data.patientName,
+        doctorId: data.doctorId,
+        appointmentDate: data.appointmentDate,
+        slot: data.slot,
+        notes: data.notes || '',
+      });
+
+      console.log('Appointment created successfully with ID:', appointmentId);
+      onClose(); // Close the modal after a successful booking
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+    }
   };
 
   return (
@@ -115,8 +130,10 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">Select a doctor</option>
-              {availableDoctors.map(doctor => (
-                <option key={doctor.id} value={doctor.id}>{doctor.name}</option>
+              {availableDoctors.map((doctor) => (
+                <option key={doctor.id} value={doctor.id}>
+                  {doctor.name}
+                </option>
               ))}
             </select>
             {errors.doctorId && <p className="text-red-500 text-sm">{errors.doctorId.message}</p>}
@@ -127,11 +144,7 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             <select
               id="appointmentDate"
               {...register('appointmentDate', { required: 'Date is required' })}
-              onChange={(e) => {
-                setSelectedDate(e.target.value);
-                // Optionally clear selected slot when date changes
-                // setSelectedSlot(null);
-              }}
+              onChange={(e) => setSelectedDate(e.target.value)}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">Select a date</option>
@@ -150,8 +163,10 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             >
               <option value="">Select a slot</option>
-              {availableSlots.map(slot => (
-                <option key={slot} value={slot}>{slot}</option>
+              {availableSlots.map((slot) => (
+                <option key={slot} value={slot}>
+                  {slot}
+                </option>
               ))}
             </select>
             {errors.slot && <p className="text-red-500 text-sm">{errors.slot.message}</p>}
@@ -162,14 +177,14 @@ const BookAppointmentModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             <input
               id="patientName"
               type="text"
-              value={patientName}
+              value={session?.user?.userName || ''}
               readOnly
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed"
             />
           </div>
 
-          <input type="hidden" value={patientId} {...register('patientId')} />
-          <input type="hidden" value={patientName} {...register('patientName')} />
+          <input type="hidden" value={session?.user?.id || ''} {...register('patientId')} />
+          <input type="hidden" value={session?.user?.name || ''} {...register('patientName')} />
 
           <div>
             <label htmlFor="notes" className="block text-gray-700 text-sm font-medium">Notes</label>

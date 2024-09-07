@@ -28,7 +28,7 @@ export const authOptionsConfig = {
                 id: user.uid,
                 email: user.email,
                 userType: userData.userType,
-                userName: userData.name,
+                userName: userData.name, // Include the user's name here
               };
             } else {
               return null;
@@ -46,15 +46,21 @@ export const authOptionsConfig = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      // If user exists, add additional properties to the token
       if (user) {
         token.id = user.id;
         token.email = user.email;
         token.userType = user.userType; // Add userType to token
+        token.userName = user.userName; // Add userName to token
       }
       return token;
     },
     async session({ session, token }) {
-      session.user = token;
+      // Add the custom fields to the session object
+      session.user.id = token.id;
+      session.user.email = token.email;
+      session.user.userType = token.userType;
+      session.user.userName = token.userName; // Add userName to session
       return session;
     },
   },
