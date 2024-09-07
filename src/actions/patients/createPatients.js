@@ -1,8 +1,8 @@
-import { db } from "@/lib/firebaseConfig"; // Make sure this is properly initialized
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 export const getUserDataAndUploadToPatients = async (userId) => {
-  console.log(userId)
+  console.log('User ID:', userId);
 
   try {
     if (!userId) {
@@ -10,7 +10,7 @@ export const getUserDataAndUploadToPatients = async (userId) => {
     }
 
     // Fetch user data from Firestore (users collection)
-    const userDocRef = doc(db, 'users', userId);  // Use userId instead of hardcoding
+    const userDocRef = doc(db, 'users', userId);  // Proper document reference
     const userDoc = await getDoc(userDocRef);  // Fetch the document data
 
     if (!userDoc.exists()) {
@@ -18,12 +18,12 @@ export const getUserDataAndUploadToPatients = async (userId) => {
     }
 
     const userData = userDoc.data();
+    console.log('User Data:', userData);
 
-    console.log(userData)
-
-    // Return the user and patient data
+    // Return the user data
     return {
       userId,
+      userData,
     };
   } catch (error) {
     console.error('Error fetching or uploading user data:', error);
