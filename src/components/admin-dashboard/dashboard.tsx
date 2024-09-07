@@ -51,7 +51,22 @@ const AdminDashboard: React.FC<Props> = ({ numDoctors, numAppointments, numPatie
       </div>
 
       {/* Modal */}
-      {isModalOpen && <AddDoctorModal onClose={handleCloseModal} />}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-3xl relative">
+            <button
+              type="button"
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={handleCloseModal}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M6.293 4.293a1 1 0 011.414 0L10 5.586l2.293-1.293a1 1 0 111.414 1.414L11.414 7l2.293 2.293a1 1 0 01-1.414 1.414L10 8.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 7 6.293 4.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+            <AddDoctorModal onClose={handleCloseModal} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
