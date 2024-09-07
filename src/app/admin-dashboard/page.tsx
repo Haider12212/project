@@ -5,6 +5,8 @@ import React, { useEffect, useState } from 'react';
 import Header from '@/components/logout-button/logout';
 import { useSession } from 'next-auth/react';
 import { countPatients } from '@/actions/admin/countPatients';
+import { countAppointments } from '@/actions/admin/countAppointments';
+import { countDoctors } from '@/actions/admin/countDoctors';
 
 type Props = {}
 
@@ -12,12 +14,17 @@ const AdminPage =  (props: Props) => {
   const { data: session, status } = useSession();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [numPatients, setNumPatients] = useState(0);
-  const numDoctors = 20; // Example static value, replace with actual data fetching logic
-  const numAppointments = 150; // Example static value, replace with actual data fetching logic
-
+  const [numAppointments, setNumAppointments] = useState(0);
+  const [numDoctors, setNumDoctors] = useState(0);
   async function getPatients() {
     const numPatients = await countPatients();
-    return numPatients;
+    const numAppointments = await countAppointments();
+    const numDoctors = await countDoctors();
+
+    setNumPatients(numPatients);
+    setNumAppointments(numAppointments);
+    setNumDoctors(numDoctors);
+    return numPatients;    
   }
 
   useEffect(() => {
