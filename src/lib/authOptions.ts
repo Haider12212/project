@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { auth, firestore } from "@/lib/firebaseConfig"; // Adjust the path if needed
+import { auth, db } from "@/lib/firebaseConfig"; // Adjust the path if needed
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
@@ -20,7 +20,7 @@ export const authOptionsConfig = {
           
           if (user) {
             // Fetch additional user data from Firestore
-            const userDoc = await getDoc(doc(firestore, "users", user.uid));
+            const userDoc = await getDoc(doc(db, "users", user.uid));
             
             if (userDoc.exists()) {
               const userData = userDoc.data();
@@ -28,7 +28,6 @@ export const authOptionsConfig = {
                 id: user.uid,
                 email: user.email,
                 userType: userData.userType, 
-                userID : userDoc.id
               };
             } else {
               return null;

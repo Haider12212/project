@@ -1,42 +1,32 @@
+"use client";
+import { useSession } from "next-auth/react";
+import { getUserDataAndUploadToPatients } from "@/actions/patients/createPatients"; // Adjust the path if needed
+
 // pages/user/[id].js
 
-import { getUserData } from '@/actions/patients/createPatients';
+const UserProfile = () => {
+  const { data: session, status } = useSession();
 
-export async function getServerSideProps(context) {
-  const { id } = context.params;
-
-  try {
-    const userData = await getUserData(id);
-
-    return {
-      props: { userData }, // Pass user data to the page component as a prop
-    };
-  } catch (error) {
-    console.error('Error in getServerSideProps:', error);
-    return {
-      props: { error: 'Failed to fetch user data' },
-    };
-  }
-}
-
-const UserProfile = ({ userData, error }) => {
-  if (error) {
-    return <p>Error: {error}</p>;
+  // If the session is still loading
+  if (status === "loading") {
+    return <p>Loading...</p>;
   }
 
-  if (!userData) {
-    return <p>No user data found.</p>;
+  // If the user is not authenticated
+  if (!session) {
+    return <p>User is not authenticated.</p>;
   }
+
+  // Extract user data from the session
+  const { user } = session;
 
   return (
     <div>
       <h1>User Profile</h1>
-      <p>Name: {userData.name}</p>
-      <p>Email: {userData.email}</p>
-      <p>Date of Birth: {userData.dob}</p>
-      <p>Gender: {userData.gender}</p>
-      <p>Contact Info: {userData.contactInfo}</p>
-      <p>Emergency Contact: {userData.emergency}</p>
+      <button onClick={()=>{getUserDataAndUploadToPatients(user.id)}}>click me</button>
+      <p><strong>Name:</strong> {user.id}</p>
+      <p><strong>Email:</strong> {user.email}</p>
+      {user.image && <img src={user.image} alt="User Profile" width={100} height={100} />}
     </div>
   );
 };
