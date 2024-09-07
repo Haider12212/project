@@ -1,7 +1,5 @@
 import { db } from "@/lib/firebaseConfig";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-
-
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
 export const getUserDataAndUploadToPatients = async (userId, formData) => {
   console.log('User ID:', userId);
@@ -40,6 +38,13 @@ export const getUserDataAndUploadToPatients = async (userId, formData) => {
     await setDoc(patientDocRef, patientData, { merge: true });  // Merge to avoid overwriting existing data
 
     console.log(`Patient data for user ID ${userId} has been uploaded to the patients collection.`);
+
+    // Mark profileComplete as true in the user's document
+    await updateDoc(userDocRef, {
+      profileComplete: true,
+    });
+
+    console.log(`User profile for user ID ${userId} marked as complete.`);
 
     // Return the user and patient data
     return {
