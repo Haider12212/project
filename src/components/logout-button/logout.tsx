@@ -13,7 +13,7 @@ const Header: React.FC = () => {
 
   return (
     <header className="bg-gray-800 text-white p-4 flex justify-between items-center">
-      <h1 className="text-2xl">App Name</h1>
+      <h1 className="text-2xl">1M2H's Health</h1>
       <button
         onClick={handleLogout}
         className="bg-red-500 text-white py-2 px-4 rounded"
