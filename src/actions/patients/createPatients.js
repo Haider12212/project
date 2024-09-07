@@ -1,7 +1,9 @@
 import { db } from "@/lib/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
-export const getUserDataAndUploadToPatients = async (userId) => {
+
+
+export const getUserDataAndUploadToPatients = async (userId, formData) => {
   console.log('User ID:', userId);
 
   try {
@@ -20,10 +22,30 @@ export const getUserDataAndUploadToPatients = async (userId) => {
     const userData = userDoc.data();
     console.log('User Data:', userData);
 
-    // Return the user data
+    // Prepare data to upload to patients collection
+    const patientData = {
+      id: userId,
+      email: userData.email, // Reuse email from the existing user data
+      userType: 'patient', // Default type for patients
+      name: formData.name,  // From the FormData input
+      dob: formData.dateOfBirth, // From the FormData input
+      gender: formData.gender, // From the FormData input
+      contactInfo: formData.contactInfo, // From the FormData input
+      emergencyContact: formData.emergencyContact, // From the FormData input
+      createdAt: new Date(), // Add a timestamp for when the record was created
+    };
+
+    // Upload the patient data to the patients collection
+    const patientDocRef = doc(db, 'patients', userId);  // Reference to patients document
+    await setDoc(patientDocRef, patientData, { merge: true });  // Merge to avoid overwriting existing data
+
+    console.log(`Patient data for user ID ${userId} has been uploaded to the patients collection.`);
+
+    // Return the user and patient data
     return {
       userId,
       userData,
+      patientData,
     };
   } catch (error) {
     console.error('Error fetching or uploading user data:', error);
