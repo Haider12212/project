@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // useRouter for navigation
 import { signIn } from 'next-auth/react';
 import { auth, db } from '@/lib/firebaseConfig'; // Adjust the path if needed
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -12,6 +13,7 @@ const AuthPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter(); // Initialize the router
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -31,6 +33,9 @@ const AuthPage = () => {
         email: user.email,
         password: password,
       });
+
+      // Navigate to the patient dashboard after successful sign-up
+      router.push('/patient-dashboard'); // Adjust the path to your dashboard
 
     } catch (error) {
       console.error('Error signing up:', error);
