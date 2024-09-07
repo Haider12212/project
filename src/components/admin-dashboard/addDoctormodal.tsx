@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Disclosure } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid'; // Make sure to install @heroicons/react
-import { useSession } from 'next-auth/react';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { createDoctor } from '@/actions/admin/addDoctor';  // Make sure the path is correct
 
 type FormValues = {
   name: string;
@@ -14,9 +14,7 @@ type FormValues = {
   availability: { [day: string]: string[] };
 };
 
-const daysOfWeek = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
-];
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 const timeSlots = Array.from({ length: 8 }, (_, i) => {
   const startHour = 9 + Math.floor(i * 45 / 60);
@@ -32,19 +30,37 @@ interface AddDoctorModalProps {
 
 const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
   const [openDay, setOpenDay] = useState<string | null>(null);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
     defaultValues: {
       availability: daysOfWeek.reduce((acc, day) => {
         acc[day] = [];
         return acc;
-      }, {} as { [day: string]: string[] })
-    }
+      }, {} as { [day: string]: string[] }),
+    },
   });
 
-  const onSubmit: SubmitHandler<FormValues> = data => {
-    console.log(data);
-    onClose();
+  // Form submission handler
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    try {
+      // Prepare doctor data
+      const doctorData = {
+        name: data.name,
+        specialization: data.specialization,
+        contactInfo: data.contact,
+        email: data.email,
+        password: data.password,
+        availability: data.availability,
+      };
+
+      // Call the createDoctor function
+      await createDoctor(doctorData);
+
+      console.log('Doctor created successfully!');
+      reset(); // Reset the form on success
+      onClose(); // Close the modal on success
+    } catch (error) {
+      console.error('Error creating doctor:', error);
+    }
   };
 
   return (
