@@ -21,13 +21,6 @@ const AuthPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      await setDoc(doc(db, 'users', user.uid), {
-        name: name,
-        email: user.email,
-        userType: 'patient', 
-        profileComplete: false,
-      });
-
       await signIn('credentials', {
         redirect: false,
         email: user.email,
@@ -35,7 +28,7 @@ const AuthPage = () => {
       });
 
       // Navigate to the patient dashboard after successful sign-up
-      router.push('/patient-dashboard'); // Adjust the path to your dashboard
+      router.push('/patient-onboarding'); // Adjust the path to your dashboard
 
     } catch (error) {
       console.error('Error signing up:', error);

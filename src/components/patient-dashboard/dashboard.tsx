@@ -1,9 +1,59 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
 import { Calendar, User, Clipboard, Activity } from 'react-feather'; // Icons for the dashboard
+import { uploadFiles } from '@/actions/files/uploadFiles'; // Import the upload function
+import { useSession } from 'next-auth/react';  // Import to get the user session
 
 type Props = {};
 
 const Dashboard = (props: Props) => {
+  const { data: session } = useSession();  // Get user session data
+  const userId = session?.user?.id || '';  // Extract userId from the session
+
+  const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [documentNames, setDocumentNames] = useState<string[]>([]); // Store document names
+
+  // Handle file input change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(e.target.files);
+      setDocumentNames(Array.from(e.target.files).map(() => "")); // Initialize empty document names
+    }
+  };
+
+  // Handle document name input change
+  const handleDocumentNameChange = (index: number, name: string) => {
+    const updatedNames = [...documentNames];
+    updatedNames[index] = name;
+    setDocumentNames(updatedNames);
+  };
+
+  // Handle the file upload
+  const handleUpload = async () => {
+    if (!selectedFiles || documentNames.some((name) => !name) || !userId) {
+      alert('Please provide a name for each document.');
+      return;
+    }
+    setUploading(true);
+    try {
+      // Map selected files to their document names
+      const filesWithNames = Array.from(selectedFiles).map((file, index) => ({
+        file,
+        name: documentNames[index],
+      }));
+
+      // Call uploadFiles function with userId and files
+      const uploadedDocs = await uploadFiles(filesWithNames, userId, 'medical-documents');
+      setDocuments((prevDocs) => [...prevDocs, ...uploadedDocs]);
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container p-6">
       <h1 className="text-3xl font-bold mb-6">Patient Dashboard</h1>
@@ -39,6 +89,50 @@ const Dashboard = (props: Props) => {
           <h2 className="text-xl font-semibold mt-4">Book New Appointment</h2>
           <p className="mt-2">Schedule a new appointment with a doctor.</p>
           <button className="mt-4 bg-red-700 py-2 px-4 rounded">Book Appointment</button>
+        </div>
+
+        {/* Upload Medical Documents */}
+        <div className="dashboard-card bg-purple-500 text-white p-4 rounded-md shadow-md">
+          <Clipboard size={48} />
+          <h2 className="text-xl font-semibold mt-4">Upload Medical Documents</h2>
+          <p className="mt-2">Upload and store your medical documents securely.</p>
+          
+          <input type="file" multiple onChange={handleFileChange} className="mt-4" />
+          
+          {selectedFiles && Array.from(selectedFiles).map((file, index) => (
+            <div key={index} className="mt-4">
+              <p className="font-semibold">{file.name}</p>
+              <input
+                type="text"
+                placeholder="Document Name"
+                value={documentNames[index] || ""}
+                onChange={(e) => handleDocumentNameChange(index, e.target.value)}
+                className="mt-2 p-2 border border-gray-300 rounded w-full"
+              />
+            </div>
+          ))}
+
+          <button
+            onClick={handleUpload}
+            className="mt-4 bg-purple-700 py-2 px-4 rounded"
+            disabled={uploading || !selectedFiles || documentNames.some((name) => !name) || !userId}
+          >
+            {uploading ? 'Uploading...' : 'Upload Documents'}
+          </button>
+
+          {/* Show uploaded documents */}
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold">Uploaded Documents:</h3>
+            <ul>
+              {documents.map((doc, index) => (
+                <li key={index}>
+                  <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-white underline">
+                    {doc.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
