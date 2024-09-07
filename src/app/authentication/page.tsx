@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // useRouter for navigation
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { auth, db } from '@/lib/firebaseConfig'; // Adjust the path if needed
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -14,6 +14,26 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter(); // Initialize the router
+  const { data: session } = useSession(); // Access session
+
+  // Redirect based on user type after login
+  useEffect(() => {
+    if (session?.user?.userType) {
+      switch (session.user.userType) {
+        case 'patient':
+          router.push('/patient-onboarding');
+          break;
+        case 'doctor':
+          router.push('/doctor-dashboard');
+          break;
+        case 'admin':
+          router.push('/admin-dashboard');
+          break;
+        default:
+          router.push('/');
+      }
+    }
+  }, [session, router]);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -24,7 +44,7 @@ const AuthPage = () => {
       await setDoc(doc(db, 'users', user.uid), {
         name: name,
         email: user.email,
-        userType: 'patient', 
+        userType: 'patient',
         profileComplete: false,
       });
 
@@ -34,9 +54,8 @@ const AuthPage = () => {
         password: password,
       });
 
-      // Navigate to the patient dashboard after successful sign-up
-      router.push('/patient-onboarding'); // Adjust the path to your dashboard
-
+      // Redirect to the patient onboarding page after successful sign-up
+      router.push('/patient-onboarding');
     } catch (error) {
       console.error('Error signing up:', error);
       setError('Failed to sign up. Please try again.');
@@ -46,12 +65,15 @@ const AuthPage = () => {
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
-      await signIn('credentials', {
-        redirect: false,
-        email: email,
-        password: password,
+      const res = await signIn('credentials', {
+        redirect: false,  // Prevent default redirect
+        email,
+        password,
       });
 
+      if (!res.ok) {
+        setError('Failed to sign in. Please try again.');
+      }
     } catch (error) {
       console.error('Error signing in:', error);
       setError('Failed to sign in. Please try again.');
