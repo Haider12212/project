@@ -1,34 +1,56 @@
-"use client";
-import { useSession } from "next-auth/react";
-import { getUserDataAndUploadToPatients } from "@/actions/patients/createPatients"; // Adjust the path if needed
+'use client';
+import React, { useState } from 'react';
+import { uploadFile } from '@/actions/files/uploadFiles';  // Adjust the path as needed
 
-// pages/user/[id].js
+const FileUploadComponent = () => {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [downloadURL, setDownloadURL] = useState<string | null>(null);
 
-const UserProfile = () => {
-  const { data: session, status } = useSession();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
 
-  // If the session is still loading
-  if (status === "loading") {
-    return <p>Loading...</p>;
-  }
+  const handleUpload = async () => {
+    if (!file) return;
 
-  // If the user is not authenticated
-  if (!session) {
-    return <p>User is not authenticated.</p>;
-  }
+    setUploading(true);
 
-  // Extract user data from the session
-  const { user } = session;
+    try {
+      // Call the uploadFile function
+      const url = await uploadFile(file, 'your-folder-name'); // Optional folder name
+      setDownloadURL(url);
+      console.log('File uploaded successfully:', url);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      <button onClick={()=>{getUserDataAndUploadToPatients(user.id)}}>click me</button>
-      <p><strong>Name:</strong> {user.id}</p>
-      <p><strong>Email:</strong> {user.email}</p>
-      {user.image && <img src={user.image} alt="User Profile" width={100} height={100} />}
+    <div className="flex flex-col items-center justify-center">
+      <input type="file" onChange={handleFileChange} />
+      <button
+        className="bg-blue-500 text-white p-2 rounded mt-4"
+        onClick={handleUpload}
+        disabled={!file || uploading}
+      >
+        {uploading ? 'Uploading...' : 'Upload'}
+      </button>
+
+      {downloadURL && (
+        <div className="mt-4">
+          <p>Download URL:</p>
+          <a href={downloadURL} target="_blank" rel="noopener noreferrer">
+            {downloadURL}
+          </a>
+        </div>
+      )}
     </div>
   );
 };
 
-export default UserProfile;
+export default FileUploadComponent;
