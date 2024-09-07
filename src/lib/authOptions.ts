@@ -64,6 +64,10 @@ export const authOptionsConfig = {
       return session;
     },
   },
+  // Specify custom sign-in page
+  pages: {
+    signIn: '/authentication', // Point to the custom sign-in page
+  },
 };
 
 export default NextAuth(authOptionsConfig);
