@@ -1,9 +1,16 @@
-import React from 'react';
+'use client'
+import React, { useState } from 'react';
 import { Calendar, User, Clipboard, Activity } from 'react-feather'; // Icons for the dashboard
+import BookAppointmentModal from './bookAppointmentmodal'; // Adjust the import path as needed
 
 type Props = {};
 
 const Dashboard = (props: Props) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   return (
     <div className="dashboard-container p-6">
       <h1 className="text-3xl font-bold mb-6">Patient Dashboard</h1>
@@ -38,9 +45,15 @@ const Dashboard = (props: Props) => {
           <Activity size={48} />
           <h2 className="text-xl font-semibold mt-4">Book New Appointment</h2>
           <p className="mt-2">Schedule a new appointment with a doctor.</p>
-          <button className="mt-4 bg-red-700 py-2 px-4 rounded">Book Appointment</button>
+          <button
+            className="mt-4 bg-red-700 py-2 px-4 rounded"
+            onClick={openModal}
+          >
+            Book Appointment
+          </button>
         </div>
       </div>
+      {isModalOpen && <BookAppointmentModal onClose={closeModal} />}
     </div>
   );
 };
