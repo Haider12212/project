@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Disclosure } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid'; // Make sure to install @heroicons/react
+import { useSession } from 'next-auth/react';
 
 type FormValues = {
   name: string;
   specialization: string;
   contact: string;
   email: string;
-  availability: { [day: string]: string[] }; // availability mapped by day of week
+  password: string;
+  availability: { [day: string]: string[] };
 };
 
 const daysOfWeek = [
@@ -29,7 +31,7 @@ interface AddDoctorModalProps {
 }
 
 const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
-  const [openDay, setOpenDay] = useState<string | null>(null); // Track the open day
+  const [openDay, setOpenDay] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
@@ -41,14 +43,13 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
   });
 
   const onSubmit: SubmitHandler<FormValues> = data => {
-    // Handle form submission, e.g., send data to API
     console.log(data);
-    onClose(); // Close modal after form submission
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-      <div className="bg-white p-6 rounded-md shadow-lg w-full max-w-3xl relative">
+      <div className="bg-white p-4 rounded-md shadow-lg w-full max-w-md relative overflow-y-auto max-h-[90vh]">
         <button
           type="button"
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -58,9 +59,9 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
             <path fillRule="evenodd" d="M6.293 4.293a1 1 0 011.414 0L10 5.586l2.293-1.293a1 1 0 111.414 1.414L11.414 7l2.293 2.293a1 1 0 01-1.414 1.414L10 8.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 7 6.293 4.707a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </button>
-        <h2 className="text-2xl font-bold mb-4">Add Doctor</h2>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="mb-4">
+        <h2 className="text-xl font-bold mb-4">Add Doctor</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
             <label htmlFor="name" className="block text-gray-700">Name</label>
             <input
               id="name"
@@ -70,7 +71,7 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
             />
             {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
           </div>
-          <div className="mb-4">
+          <div>
             <label htmlFor="specialization" className="block text-gray-700">Specialization</label>
             <input
               id="specialization"
@@ -80,7 +81,7 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
             />
             {errors.specialization && <p className="text-red-500 text-sm">{errors.specialization.message}</p>}
           </div>
-          <div className="mb-4">
+          <div>
             <label htmlFor="contact" className="block text-gray-700">Contact</label>
             <input
               id="contact"
@@ -90,7 +91,7 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
             />
             {errors.contact && <p className="text-red-500 text-sm">{errors.contact.message}</p>}
           </div>
-          <div className="mb-4">
+          <div>
             <label htmlFor="email" className="block text-gray-700">Email</label>
             <input
               id="email"
@@ -100,25 +101,35 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
             />
             {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
           </div>
+          <div>
+            <label htmlFor="password" className="block text-gray-700">Password</label>
+            <input
+              id="password"
+              type="password"
+              {...register('password', { required: 'Password is required' })}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+            {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
+          </div>
 
           {/* Availability Section */}
-          <div className="mb-4">
+          <div>
             <label className="block text-gray-700">Availability</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               {daysOfWeek.map(day => (
                 <Disclosure key={day}>
                   {({ open }) => (
                     <>
                       <Disclosure.Button
-                        className="w-full text-left bg-gray-200 p-2 rounded-md mb-2 flex justify-between items-center"
+                        className="w-full text-left bg-gray-200 p-2 rounded-md flex justify-between items-center"
                         onClick={() => setOpenDay(openDay === day ? null : day)}
                       >
                         <span>{day}</span>
                         <ChevronDownIcon className={`w-5 h-5 ${openDay === day ? 'rotate-180' : 'rotate-0'} transition-transform`} />
                       </Disclosure.Button>
                       {(openDay === day) && (
-                        <Disclosure.Panel className="bg-gray-100 p-4 rounded-md">
-                          <div className="grid grid-cols-1 gap-2">
+                        <Disclosure.Panel className="bg-gray-100 p-2 rounded-md">
+                          <div className="space-y-1">
                             {timeSlots.map(slot => (
                               <div key={slot} className="flex items-center">
                                 <input
@@ -127,7 +138,7 @@ const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ onClose }) => {
                                   value={slot}
                                   className="form-checkbox h-4 w-4 text-indigo-600"
                                 />
-                                <span className="ml-2">{slot}</span>
+                                <span className="ml-2 text-sm">{slot}</span>
                               </div>
                             ))}
                           </div>

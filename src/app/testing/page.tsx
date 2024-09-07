@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
-import { auth, firestore } from '@/lib/firebaseConfig'; // Adjust the path if needed
+import { auth, db } from '@/lib/firebaseConfig'; // Adjust the path if needed
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -12,7 +12,7 @@ const SignUpPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSignUp = async (e) => {
+  const handleSignUp = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     try {
       // Create a user with Firebase Authentication
@@ -20,7 +20,7 @@ const SignUpPage = () => {
       const user = userCredential.user;
 
       // Add user details to Firestore, including userType
-      await setDoc(doc(firestore, 'users', user.uid), {
+      await setDoc(doc(db, 'users', user.uid), {
         name: name,
         email: user.email,
         userType: 'patient', 
