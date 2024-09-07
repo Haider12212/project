@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, User, Clipboard, Activity } from 'react-feather'; // Icons for the dashboard
 import { uploadFiles } from '@/actions/files/uploadFiles'; // Import the upload function
 import { useSession } from 'next-auth/react';  // Import to get the user session
@@ -9,13 +9,20 @@ type Props = {};
 
 const Dashboard = (props: Props) => {
   const { data: session } = useSession();  // Get user session data
-  const userId = session?.user?.id || '';  // Extract userId from the session
-
+  const [userId, setUserId] = useState<string | null>(null); // Store userId
   const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [documentNames, setDocumentNames] = useState<string[]>([]); // Store document names
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+
+  // Use useEffect to set the userId after the session is loaded
+  useEffect(() => {
+    if (session?.user?.id) {
+      console.log(session.user)
+      setUserId(session.user.id);
+    }
+  }, [session]);
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

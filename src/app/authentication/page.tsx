@@ -21,6 +21,13 @@ const AuthPage = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      await setDoc(doc(db, 'users', user.uid), {
+        name: name,
+        email: user.email,
+        userType: 'patient', 
+        profileComplete: false,
+      });
+
       await signIn('credentials', {
         redirect: false,
         email: user.email,
